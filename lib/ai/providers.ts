@@ -36,6 +36,6 @@ export const myProvider = isTestEnvironment
         'artifact-model': openrouter('openai/gpt-4o-mini'),
       },
       imageModels: {
-        'small-model': openrouter('openai/gpt-4o-mini'),
+        'small-model': openrouter('openai/gpt-4o-mini') as any,
       },
     });
