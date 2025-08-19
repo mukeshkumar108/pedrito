@@ -73,8 +73,8 @@ export default async function RootLayout({
       <body className="antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light" // changed from 'system' to 'light' to force light mode
+          enableSystem={false} // disable system theme detection
           disableTransitionOnChange
         >
           <Toaster position="top-center" />
