@@ -222,6 +222,14 @@ export async function POST(request: Request) {
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
+    console.error(error);
+    return new Response(
+      JSON.stringify({ error: 'An unexpected error occurred.' }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
   }
 }
 

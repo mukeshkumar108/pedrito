@@ -3,7 +3,7 @@ import {
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from 'ai';
-import { xai } from '@ai-sdk/xai';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import {
   artifactModel,
   chatModel,
@@ -11,6 +11,10 @@ import {
   titleModel,
 } from './models.test';
 import { isTestEnvironment } from '../constants';
+
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY,
+});
 
 export const myProvider = isTestEnvironment
   ? customProvider({
@@ -23,15 +27,15 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model': xai('grok-2-vision-1212'),
+        'chat-model': openrouter('openai/gpt-oss-120b'),
         'chat-model-reasoning': wrapLanguageModel({
-          model: xai('grok-3-mini-beta'),
+          model: openrouter('openai/gpt-4o-mini'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'title-model': xai('grok-2-1212'),
-        'artifact-model': xai('grok-2-1212'),
+        'title-model': openrouter('meta-llama/llama-3.2-3b-instruct'),
+        'artifact-model': openrouter('openai/gpt-4o-mini'),
       },
       imageModels: {
-        'small-model': xai.imageModel('grok-2-image'),
+        'small-model': openrouter('openai/gpt-4o-mini'),
       },
     });
