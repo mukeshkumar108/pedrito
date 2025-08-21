@@ -29,11 +29,11 @@ export const myProvider = isTestEnvironment
       languageModels: {
         'chat-model': openrouter('openai/gpt-oss-120b'),
         'chat-model-reasoning': wrapLanguageModel({
-          model: openrouter('openai/gpt-4o-mini'),
+          model: openrouter('meta-llama/llama-4-maverick'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
         'title-model': openrouter('meta-llama/llama-3.2-3b-instruct'),
-        'artifact-model': openrouter('openai/gpt-4o-mini'),
+        'artifact-model': openrouter('meta-llama/llama-4-maverick'),
       },
       imageModels: {
         'small-model': openrouter('openai/gpt-4o-mini') as any,
