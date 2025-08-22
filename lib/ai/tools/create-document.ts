@@ -13,48 +13,163 @@ interface CreateDocumentProps {
   dataStream: UIMessageStreamWriter<ChatMessage>;
 }
 
+// (unchanged) classifyDocType helper …
+function classifyDocType(input: {
+  title?: string;
+  original_request?: string;
+  context?: string | string[];
+}): 'letter' | 'talk' | 'essay' | 'translation' | 'report' | 'other' {
+  const blob = [
+    input.title || '',
+    Array.isArray(input.context)
+      ? input.context.join(' ')
+      : input.context || '',
+    input.original_request || '',
+  ]
+    .join(' ')
+    .toLowerCase();
+
+  if (/\btalk|discurso|charla|sermon|homil/.test(blob)) return 'talk';
+  if (/\bletter|carta|notificación/.test(blob)) return 'letter';
+  if (/\bessay|ensayo\b/.test(blob)) return 'essay';
+  if (/\btranslate|traducci/.test(blob)) return 'translation';
+  if (/\breport|informe|summary|analysis/.test(blob)) return 'report';
+  return 'other';
+}
+
 export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
   tool({
     description:
-      'Create a document for a writing or content creation activities. This tool will call other functions that will generate the contents of the document based on the title and kind.',
+      'Create a document for writing or content creation. This tool will generate the contents of the document based on the title, type, and context.',
     inputSchema: z.object({
       title: z.string(),
-      kind: z.enum(artifactKinds),
+
+      // ✅ Make `kind` default to "text" so missing values don’t crash
+      kind: z.enum(artifactKinds).default('text'),
+
+      // Accept string OR array of strings for context
+      context: z.union([z.string(), z.array(z.string())]).optional(),
+      language: z.enum(['es-GT', 'en']).optional(),
+      tone: z.enum(['formal', 'neutral', 'warm']).optional(),
+      outline: z.array(z.string()).optional(),
+      length: z.enum(['short', 'medium', 'long', '5-min talk']).optional(),
+      original_request: z.string().optional(),
+
+      // Extra guidance
+      must_include: z.array(z.string()).optional(),
+      audience: z.string().optional(),
+
+      // Optional doc_type
+      doc_type: z
+        .enum(['letter', 'talk', 'essay', 'translation', 'report', 'other'])
+        .optional(),
     }),
-    execute: async ({ title, kind }) => {
+    execute: async (payload) => {
+      const {
+        title,
+        kind,
+        context,
+        language,
+        tone,
+        outline,
+        length,
+        original_request,
+        doc_type,
+        must_include,
+        audience,
+      } = payload as {
+        title: string;
+        kind?: (typeof artifactKinds)[number]; // may be undefined before defaulting
+        context?: string | string[];
+        language?: 'es-GT' | 'en';
+        tone?: 'formal' | 'neutral' | 'warm';
+        outline?: string[];
+        length?: 'short' | 'medium' | 'long' | '5-min talk';
+        original_request?: string;
+        must_include?: string[];
+        audience?: string;
+        doc_type?:
+          | 'letter'
+          | 'talk'
+          | 'essay'
+          | 'translation'
+          | 'report'
+          | 'other';
+      };
+
+      // Even though Zod defaults kind, keep this safety just in case:
+      const safeKind: (typeof artifactKinds)[number] = kind ?? 'text';
+
+      // Normalize context
+      const normalizedContext = Array.isArray(context)
+        ? context.join('\n')
+        : context || '(no context provided)';
+
+      // Resolve doc_type
+      const resolvedDocType =
+        doc_type && doc_type !== 'other'
+          ? doc_type
+          : classifyDocType({ title, original_request, context });
+
+      if (process.env.DEBUG_ARTIFACTS === 'true') {
+        console.log(
+          '[createDocument] input from model:',
+          JSON.stringify(
+            {
+              title,
+              kind: safeKind,
+              language,
+              tone,
+              length,
+              outline,
+              doc_type: resolvedDocType,
+              audience,
+              must_include,
+              context, // raw
+              original_request: (original_request || '').slice(0, 500),
+            },
+            null,
+            2,
+          ),
+        );
+      }
+
       const id = generateUUID();
 
-      dataStream.write({
-        type: 'data-kind',
-        data: kind,
-        transient: true,
-      });
-
-      dataStream.write({
-        type: 'data-id',
-        data: id,
-        transient: true,
-      });
-
-      dataStream.write({
-        type: 'data-title',
-        data: title,
-        transient: true,
-      });
-
-      dataStream.write({
-        type: 'data-clear',
-        data: null,
-        transient: true,
-      });
+      // UI signals
+      dataStream.write({ type: 'data-kind', data: safeKind, transient: true });
+      dataStream.write({ type: 'data-id', data: id, transient: true });
+      dataStream.write({ type: 'data-title', data: title, transient: true });
+      dataStream.write({ type: 'data-clear', data: null, transient: true });
 
       const documentHandler = documentHandlersByArtifactKind.find(
-        (documentHandlerByArtifactKind) =>
-          documentHandlerByArtifactKind.kind === kind,
+        (h) => h.kind === safeKind,
       );
-
       if (!documentHandler) {
-        throw new Error(`No document handler found for kind: ${kind}`);
+        throw new Error(`No document handler found for kind: ${safeKind}`);
+      }
+
+      if (process.env.DEBUG_ARTIFACTS === 'true') {
+        console.log(
+          '[createDocument] forwarding brief to handler:',
+          JSON.stringify(
+            {
+              id,
+              title,
+              language,
+              tone,
+              length,
+              outline,
+              doc_type: resolvedDocType,
+              audience,
+              must_include,
+              context: normalizedContext.slice(0, 1000),
+              original_request: (original_request || '').slice(0, 1000),
+            },
+            null,
+            2,
+          ),
+        );
       }
 
       await documentHandler.onCreateDocument({
@@ -62,6 +177,15 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
         title,
         dataStream,
         session,
+        context: normalizedContext,
+        language,
+        tone,
+        outline,
+        length,
+        original_request,
+        doc_type: resolvedDocType,
+        must_include,
+        audience,
       });
 
       dataStream.write({ type: 'data-finish', data: null, transient: true });
@@ -69,7 +193,7 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
       return {
         id,
         title,
-        kind,
+        kind: safeKind,
         content: 'A document was created and is now visible to the user.',
       };
     },

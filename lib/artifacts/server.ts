@@ -22,6 +22,15 @@ export interface CreateDocumentCallbackProps {
   title: string;
   dataStream: UIMessageStreamWriter<ChatMessage>;
   session: Session;
+  context?: string;
+  language?: 'es-GT' | 'en';
+  tone?: 'formal' | 'neutral' | 'warm';
+  outline?: string[];
+  length?: 'short' | 'medium' | 'long' | '5-min talk';
+  original_request?: string;
+  doc_type?: 'letter' | 'talk' | 'essay' | 'translation' | 'report' | 'other';
+  must_include?: string[];
+  audience?: string;
 }
 
 export interface UpdateDocumentCallbackProps {
@@ -50,6 +59,15 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
         title: args.title,
         dataStream: args.dataStream,
         session: args.session,
+        context: args.context,
+        language: args.language,
+        tone: args.tone,
+        outline: args.outline,
+        length: args.length,
+        original_request: args.original_request,
+        doc_type: args.doc_type,
+        must_include: args.must_include,
+        audience: args.audience,
       });
 
       if (args.session?.user?.id) {
