@@ -27,6 +27,11 @@ This document defines strict rules for how the agent may operate in this reposit
     * Respect `/.agentignore`.
     * Only access files and ranges explicitly approved.
 
+## Agentignore Compliance (Mandatory)
+- In PLAN MODE, always include `/.agentignore` in the requested reads.
+- In READ MODE, summarize its top-level patterns (e.g., build artefacts, secrets, large folders).
+- If `.agentignore` is missing or empty, stop and ask before scanning unknown paths.
+
 ---
 
 ### PLAN MODE Rules (Default)
@@ -66,6 +71,25 @@ This document defines strict rules for how the agent may operate in this reposit
     * The diff is >150 lines, or
     * The change spans >3 files.
 * Never output entire files disguised as diffs.
+
+## Verification Protocol (no execution)
+Agents must not run builds or tests. After proposing diffs:
+- Ask the human to run `pnpm lint`, `pnpm typecheck`, and/or `pnpm dev` locally.
+- Request only **errors/warnings text** back (no full logs).
+- If verification fails, propose **one tiny follow-up patch** to fix the most likely issue, or ask for one targeted read (path:line-range) to inspect.
+
+## Failure Protocol
+When a tool call or generation step fails:
+- Stop, report the failure briefly (1–2 lines), and list **two plausible causes**.
+- Propose **one** minimal next step (e.g., a specific file read with line range, or a tiny patch).
+- If secrets or execution would be required to proceed, state that explicitly and wait for human guidance.
+
+---
+
+Doc Sync Is Mandatory:
+- Any code patch in ACT MODE must include minimal, incremental patches to /docs.
+- Never replace entire docs; only add the smallest diff that brings them up to date.
+- If unsure which doc to update, propose tiny candidates and ask.
 
 ---
 
