@@ -22,9 +22,9 @@ function parseMinutesFromText(raw: string): number | undefined {
       /(\d+)\s*(?:-|–|—|to|a)\s*(\d+)\s*(?:min(?:ute)?s?|minutos?)/i,
     ) || text.match(/(\d+)\s*(?:-|–|—|to|a)\s*(\d+)\s*m\b/i);
   if (range) {
-    const a = parseInt(range[1], 10);
-    const b = parseInt(range[2], 10);
-    if (!isNaN(a) && !isNaN(b) && a > 0 && b > 0) {
+    const a = Number.parseInt(range[1], 10);
+    const b = Number.parseInt(range[2], 10);
+    if (!Number.isNaN(a) && !Number.isNaN(b) && a > 0 && b > 0) {
       return Math.round((a + b) / 2);
     }
   }
@@ -33,8 +33,8 @@ function parseMinutesFromText(raw: string): number | undefined {
     text.match(/(\d+)\s*(?:min(?:ute)?s?|m|minutos?)/i) ||
     text.match(/\b(\d+)\s*mins?\b/i);
   if (single) {
-    const n = parseInt(single[1], 10);
-    if (!isNaN(n) && n > 0) return n;
+    const n = Number.parseInt(single[1], 10);
+    if (!Number.isNaN(n) && n > 0) return n;
   }
   return undefined;
 }
