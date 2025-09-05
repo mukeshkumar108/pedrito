@@ -17,3 +17,8 @@ Guidelines:
 - Keep patches tiny (unified diffs)
 - No wholesale rewrites
 - Prefer adding one or two lines to the relevant section
+
+## Linting and Formatting
+- Use `pnpm lint:check` for linting without auto-fixing.
+- Use `pnpm lint` for linting with auto-fixing using Biome's `--write --unsafe` flag, which can modify files.
+- The `tailwindcss/no-custom-classname` rule is disabled to allow custom class names, as the project uses a mix of Tailwind and custom CSS.
