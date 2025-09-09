@@ -110,13 +110,8 @@ const PurePreviewMessage = ({
               const key = `message-${message.id}-part-${index}`;
 
               if (type === 'reasoning' && part.text?.trim().length > 0) {
-                return (
-                  <MessageReasoning
-                    key={key}
-                    isLoading={isLoading}
-                    reasoning={part.text}
-                  />
-                );
+                /* Hide reasoning from users - only used for internal processing */
+                return null;
               }
 
               if (type === 'text') {

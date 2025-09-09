@@ -35,6 +35,7 @@ import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
 import { geolocation } from '@vercel/functions';
+import { sanitizeText } from '@/lib/ai/sanitize';
 import {
   createResumableStreamContext,
   type ResumableStreamContext,
@@ -131,7 +132,22 @@ export async function POST(request: Request) {
     }
 
     const messagesFromDb = await getMessagesByChatId({ id });
-    const uiMessages = [...convertToUIMessages(messagesFromDb), message];
+
+    // Apply input sanitization to user message before processing
+    const sanitizedMessage = {
+      ...message,
+      parts: message.parts?.map((part) => ({
+        ...part,
+        ...(part.type === 'text' && 'text' in part
+          ? { text: sanitizeText(part.text) }
+          : {}),
+      })),
+    };
+
+    const uiMessages = [
+      ...convertToUIMessages(messagesFromDb),
+      sanitizedMessage,
+    ];
 
     const enableMemorySlice = process.env.MEMORY_SLICE === '1';
     const MIN_TURNS_FOR_SUMMARY = Number(process.env.MEMORY_MIN_TURNS ?? 5);
