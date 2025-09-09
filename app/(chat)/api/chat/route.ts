@@ -20,7 +20,6 @@ import {
 import { convertToUIMessages, generateUUID } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
 import { createDocument } from '@/lib/ai/tools/create-document';
-import { sanitizeText } from '@/lib/ai/sanitize';
 import { getSummarizer } from '@/lib/ai/summarizer';
 import { measureConversation, pickSummaryTier } from '@/lib/ai/salience';
 import { updateDocument } from '@/lib/ai/tools/update-document';

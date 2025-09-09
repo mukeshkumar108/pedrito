@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { LanguageToggle } from './language-toggle';
 
 export function AppSidebar({ user }: { user: User | undefined }) {
   const router = useRouter();

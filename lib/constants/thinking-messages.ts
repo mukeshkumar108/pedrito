@@ -93,7 +93,7 @@ export type Language = 'en' | 'es';
 export function getThinkingMessage(
   stage: ThinkingStage,
   language: Language,
-  messageIndex: number = 0,
+  messageIndex = 0,
 ): string {
   if (language === 'en') {
     const messages = THINKING_MESSAGES.en[stage];

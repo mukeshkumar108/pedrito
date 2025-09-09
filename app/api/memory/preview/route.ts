@@ -1,6 +1,6 @@
 import { auth } from '@/app/(auth)/auth';
 import { ChatSDKError } from '@/lib/errors';
-import { getMessagesByChatId, getChatById } from '@/lib/db/queries';
+import { getMessagesByChatId, } from '@/lib/db/queries';
 import { convertToUIMessages } from '@/lib/utils';
 import { getSummarizer } from '@/lib/ai/summarizer';
 

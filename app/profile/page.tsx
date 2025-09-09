@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { SubmitButton } from '@/components/submit-button';
 import { toast } from '@/components/toast';
-import { useLanguage } from '@/lib/contexts/language-context';
-import { useTheme } from 'next-themes';
 import {
   Select,
   SelectContent,
