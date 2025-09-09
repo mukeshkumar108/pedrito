@@ -97,10 +97,97 @@
 @layer base {
     * {
         @apply border-border;
+        box-sizing: border-box;
+    }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     body {
         @apply bg-background text-foreground;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        overflow-x: hidden;
+    }
+
+    /* Mobile-friendly touch targets */
+    button, input, select, textarea, [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Table container constraints for mobile */
+    .table-container {
+        max-width: calc(100vw - 2rem); /* Account for message padding */
+        width: 100%;
+        contain: layout; /* Prevent table from affecting parent width */
+        isolation: isolate; /* Create stacking context */
+    }
+
+    /* Content scroll container for wide content (LaTeX, etc.) */
+    .content-scroll-container {
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Message content container protection */
+    .message-content-container {
+        contain: layout; /* Prevent children from affecting parent width */
+        width: 100%;
+    }
+
+    /* Mobile typography enhancement */
+    @media (max-width: 768px) {
+        .message-content-container {
+            font-size: 18px; /* Premium mobile size */
+            line-height: 144%; /* Comfortable reading */
+            letter-spacing: -0.01rem; /* Professional spacing */
+        }
+
+        /* User message content box - specific padding only for user messages */
+        [data-testid="message-user"] [data-testid="message-content"] {
+            padding-top: 1rem !important; /* 1rem top padding for user message content */
+            padding-bottom: 1rem !important; /* 1rem bottom padding for user message content */
+        }
+
+        /* Override textarea font size with highest specificity - beat !text-base */
+        textarea.chat-input.input-typography,
+        .chat-input textarea.input-typography,
+        textarea[class*="chat-input"][class*="input-typography"] {
+            font-size: 18px !important; /* Premium mobile size - override !text-base */
+            line-height: 144% !important; /* Comfortable reading - override */
+            letter-spacing: -0.01rem !important; /* Professional spacing - override */
+        }
+    }
+
+    /* Prevent horizontal overflow on mobile */
+    * {
+        max-width: 100%;
+    }
+
+    /* Mobile-specific media queries */
+    @media (max-width: 768px) {
+        body {
+            font-size: 16px; /* Prevent zoom on iOS */
+        }
+
+        /* Ensure proper scrolling on mobile */
+        .mobile-scroll {
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    @media (max-width: 480px) {
+        /* Extra small mobile adjustments */
+        button, input, select, textarea {
+            font-size: 16px; /* Prevent zoom on iOS inputs */
+        }
     }
 }
 
