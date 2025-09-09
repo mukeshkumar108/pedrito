@@ -1,62 +1,174 @@
-<a href="https://chat.vercel.ai/">
-  <img alt="Next.js 14 and App Router-ready AI chatbot." src="app/(chat)/opengraph-image.png">
-  <h1 align="center">Chat SDK</h1>
-</a>
+# Pedrito 🤖
+
+<div align="center">
+  <img alt="Pedrito - Your witty AI assistant" src="app/(chat)/opengraph-image.png" width="200">
+  <h1 align="center">Your Witty, Intelligent AI Assistant</h1>
+</div>
 
 <p align="center">
-    Chat SDK is a free, open-source template built with Next.js and the AI SDK that helps you quickly build powerful chatbot applications.
+  Pedrito is a sophisticated AI chat assistant that combines advanced AI capabilities with a charming personality. Built with modern web technologies, it offers seamless conversations, document creation, and personalized experiences.
 </p>
 
 <p align="center">
-  <a href="https://chat-sdk.dev"><strong>Read Docs</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a>
+  <a href="#architecture"><strong>Architecture</strong></a> ·
+  <a href="#getting-started"><strong>Getting Started</strong></a> ·
+  <a href="#deployment"><strong>Deployment</strong></a>
 </p>
 <br/>
 
-## Features
+## ✨ Key Features
 
-- [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://sdk.vercel.ai/docs)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports xAI (default), OpenAI, Fireworks, and other model providers
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Neon Serverless Postgres](https://vercel.com/marketplace/neon) for saving chat history and user data
-  - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
-- [Auth.js](https://authjs.dev)
-  - Simple and secure authentication
+- **🧠 Advanced Memory System** - Remembers context across conversations for true continuity
+- **🌐 Multi-Language Support** - Fluent in English and Spanish with intelligent switching
+- **📄 Smart Document Creation** - Generates professional documents, code snippets, and spreadsheets
+- **🎨 Personalized Experience** - Adapts to user preferences and conversation style
+- **🔒 Privacy-First Design** - No reasoning display, input sanitization, secure data handling
+- **⚡ Modern UX** - Beautiful interface with smooth interactions and accessibility
+- **🎭 Witty Personality** - Pedrito's charming, supportive Gen Z personality makes interactions enjoyable
+- **📱 Responsive Design** - Works perfectly on desktop, tablet, and mobile devices
 
-## Model Providers
+## 🏗️ Architecture
 
-This template ships with [xAI](https://x.ai) `grok-2-1212` as the default chat model. However, with the [AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://sdk.vercel.ai/providers/ai-sdk-providers) with just a few lines of code.
+Pedrito combines several sophisticated systems to create an intelligent, personality-driven AI assistant:
 
-## Deploy Your Own
+### **Core Systems**
+- **🧠 Memory Engine** - Advanced conversation continuity with structured summarization
+- **🎭 Personality Layer** - Adaptive responses based on user preferences and context
+- **📄 Artifact System** - Professional document and content generation
+- **🌐 Language Handler** - Intelligent English/Spanish switching and translation
+- **🔒 Privacy System** - Input sanitization and reasoning control
 
-You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
+### **Technical Architecture**
+- **Frontend Framework:** Next.js 14 with App Router
+- **UI Framework:** React with TypeScript and Tailwind CSS
+- **Component Library:** shadcn/ui with Radix UI primitives
+- **AI Integration:** Vercel AI SDK with multiple LLM providers
+- **Database:** Neon Postgres with Drizzle ORM
+- **Authentication:** NextAuth.js v5
+- **State Management:** React hooks with SWR for data fetching
+- **Real-time Features:** Server-Sent Events for streaming responses
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot&env=AUTH_SECRET&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot%2Fblob%2Fmain%2F.env.example&demo-title=AI+Chatbot&demo-description=An+Open-Source+AI+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&demo-url=https%3A%2F%2Fchat.vercel.ai&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22ai%22%2C%22productSlug%22%3A%22grok%22%2C%22integrationSlug%22%3A%22xai%22%7D%2C%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22neon%22%2C%22integrationSlug%22%3A%22neon%22%7D%2C%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22upstash-kv%22%2C%22integrationSlug%22%3A%22upstash%22%7D%2C%7B%22type%22%3A%22blob%22%7D%5D)
+### **Key Technologies**
+- **Styling:** Tailwind CSS for modern, responsive design
+- **Icons:** Lucide React for consistent iconography
+- **Forms:** React Hook Form with validation
+- **Notifications:** Custom toast system
+- **File Storage:** Vercel Blob for efficient file handling
+- **Deployment:** Vercel platform with edge functions
 
-## Running locally
+## 🚀 Getting Started
 
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
+### **Prerequisites**
+- Node.js 18+
+- pnpm package manager
+- Git
 
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various AI and authentication provider accounts.
+### **Quick Setup**
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/mukeshkumar108/pedrito.git
+   cd pedrito
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with your API keys
+   ```
+
+4. **Configure required environment variables:**
+   ```env
+   # AI Provider (choose one)
+   XAI_API_KEY=your_xai_key_here
+   # or
+   OPENAI_API_KEY=your_openai_key_here
+
+   # Database
+   DATABASE_URL=your_neon_postgres_url
+
+   # Authentication
+   AUTH_SECRET=your_auth_secret
+   AUTH_TRUST_HOST=true
+
+   # Optional: File storage
+   BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
+   ```
+
+5. **Run database migrations**
+   ```bash
+   pnpm db:migrate
+   ```
+
+6. **Start the development server**
+   ```bash
+   pnpm dev
+   ```
+
+7. **Open your browser**
+   ```
+   http://localhost:3000
+   ```
+
+### **First Time Setup**
+- Create an account or sign in
+- Customize your profile settings
+- Start chatting with Pedrito!
+- Try creating documents or switching languages
+
+## 📦 Deployment
+
+### **Vercel (Recommended)**
+
+1. **Connect your repository to Vercel**
+2. **Add environment variables in Vercel dashboard**
+3. **Deploy automatically on push**
+
+### **Manual Deployment**
+
+Pedrito can be deployed to any platform supporting Node.js:
 
 ```bash
-pnpm install
-pnpm dev
+# Build for production
+pnpm build
+
+# Start production server
+pnpm start
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000).
+### **Environment Variables for Production**
+- `NODE_ENV=production`
+- `AUTH_TRUST_HOST=true`
+- All AI provider keys and database URLs
+
+---
+
+## 🎯 What Makes Pedrito Special
+
+Unlike generic AI chatbots, Pedrito offers:
+
+- **Personality-Driven Interactions** - Witty, supportive conversations that feel natural
+- **True Conversation Continuity** - Remembers context across sessions
+- **Professional Document Creation** - Generates business-ready content
+- **Intelligent Language Switching** - Seamless English/Spanish conversations
+- **Privacy-Conscious Design** - No reasoning leaks, input sanitization
+- **Adaptive Learning** - Gets better at understanding your preferences
+
+---
+
+## 📚 Documentation
+
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - System design and data flow
+- **[Features Guide](docs/FEATURES.md)** - Complete feature documentation
+- **[API Reference](docs/FLOWS.md)** - Chat and memory system details
+- **[Memory System](docs/MEMORY_SYSTEM.md)** - Advanced conversation memory
+
+---
+
+**Ready to experience the future of AI assistance? Start chatting with Pedrito today!** 🚀✨
