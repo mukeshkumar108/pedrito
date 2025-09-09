@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { LanguageToggle } from './language-toggle';
 
 export function AppSidebar({ user }: { user: User | undefined }) {
   const router = useRouter();
@@ -61,7 +62,12 @@ export function AppSidebar({ user }: { user: User | undefined }) {
       <SidebarContent>
         <SidebarHistory user={user} />
       </SidebarContent>
-      <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
+      <SidebarFooter>
+        <div className="flex flex-col gap-2 p-2">
+          <LanguageToggle />
+          {user && <SidebarUserNav user={user} />}
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -20,8 +20,16 @@ import {
 import { convertToUIMessages, generateUUID } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
 import { createDocument } from '@/lib/ai/tools/create-document';
+import { sanitizeText } from '@/lib/ai/sanitize';
+import { getSummarizer } from '@/lib/ai/summarizer';
+import { measureConversation, pickSummaryTier } from '@/lib/ai/salience';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
+import {
+  formatStructuredMemoryToPrompt,
+  createToolMemoryBrief,
+  recencyWeighting,
+} from '@/lib/ai/memory-utils';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
@@ -49,12 +57,14 @@ export function getStreamContext() {
         waitUntil: after,
       });
     } catch (error: any) {
+      console.error(
+        'Failed to create resumable stream context:',
+        error.message,
+      );
       if (error.message.includes('REDIS_URL')) {
         console.log(
           ' > Resumable streams are disabled due to missing REDIS_URL',
         );
-      } else {
-        console.error(error);
       }
     }
   }
@@ -124,6 +134,126 @@ export async function POST(request: Request) {
     const messagesFromDb = await getMessagesByChatId({ id });
     const uiMessages = [...convertToUIMessages(messagesFromDb), message];
 
+    const enableMemorySlice = process.env.MEMORY_SLICE === '1';
+    const MIN_TURNS_FOR_SUMMARY = Number(process.env.MEMORY_MIN_TURNS ?? 5);
+    let memoryBrief = '';
+    let systemWithMemory = systemPrompt({
+      selectedChatModel,
+      requestHints: { longitude: '0', latitude: '0', city: '', country: '' },
+    });
+    let messagesToSend = uiMessages;
+
+    // Declare variables outside the if block so they're accessible later
+    const convo = uiMessages
+      .filter((m) => m.role === 'user' || m.role === 'assistant')
+      .map((m) => ({
+        role: m.role as 'user' | 'assistant',
+        content: (m.parts?.map?.((p: any) => p.text || '').join(' ') || '')
+          .replace(
+            /^(Reasoned .*|We need to respond .*|User says .*|Assistant .*):?/i,
+            '',
+          )
+          .trim(),
+      }))
+      .filter((m) => m.content.length > 0);
+
+    const { tokensApprox, salience, language } = measureConversation(convo);
+    const minTokens = Number(process.env.MEMORY_MIN_TOKENS ?? 400);
+    const minSal = Number(process.env.MEMORY_MIN_SALIENCE ?? 3);
+    const shouldSummarize = tokensApprox >= minTokens || salience >= minSal;
+
+    if (enableMemorySlice) {
+      if (convo.length >= MIN_TURNS_FOR_SUMMARY && shouldSummarize) {
+        try {
+          // Use structured memory extraction
+          const structuredMemory = await getSummarizer().summarizeStructured(
+            convo,
+            language,
+          );
+
+          // Apply recency weighting based on recent messages
+          const recentMessages = uiMessages.slice(-3); // Last 3 messages for recency
+          const enhancedMemory = recencyWeighting(
+            structuredMemory,
+            recentMessages,
+          );
+
+          // Format structured memory for system prompt
+          const memoryBlock = formatStructuredMemoryToPrompt(enhancedMemory);
+          systemWithMemory = `${systemWithMemory}\n\n${memoryBlock}`;
+
+          // Create compact brief for tools with most relevant information
+          memoryBrief = createToolMemoryBrief(enhancedMemory);
+
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(
+              `[memory] Extracted ${enhancedMemory.facts.length} facts, ${
+                enhancedMemory.decisions.length
+              } decisions, ${
+                enhancedMemory.openItems.length
+              } open items. Confidence: ${enhancedMemory.metadata.confidence}`,
+            );
+          }
+
+          // Dynamic lastK calculation (unchanged)
+          const lastKMax = Number(process.env.MEMORY_LAST_K_MAX ?? 10);
+          const dynamicLastK = Math.max(
+            4,
+            Math.min(lastKMax, Math.round(tokensApprox / 500) + 3),
+          );
+          messagesToSend = uiMessages.slice(-dynamicLastK);
+        } catch (err) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn(
+              '[memory] Structured summarizer failed, falling back to plain summary:',
+              err,
+            );
+          }
+
+          // Fallback to plain summary
+          try {
+            const tier = pickSummaryTier(tokensApprox);
+            const summary = await getSummarizer().summarizePlain(
+              convo,
+              tier,
+              language,
+            );
+
+            const filteredSummary = summary
+              .replace(/\b(jokes?|lol|haha|funny|joking)\b/gi, '')
+              .replace(/\b(meta|technical|internal)\b/gi, '')
+              .replace(/\s+/g, ' ')
+              .trim();
+
+            const memoryBlock = `\n[MEMORY]\n${filteredSummary}`;
+            systemWithMemory = `${systemWithMemory}${memoryBlock}`;
+
+            // Simple fallback brief
+            memoryBrief =
+              language === 'es'
+                ? `Resumen: ${filteredSummary.split('.')[0] || filteredSummary}`
+                : `Summary: ${filteredSummary.split('.')[0] || filteredSummary}`;
+          } catch (fallbackErr) {
+            console.warn(
+              '[memory] Fallback summarizer also failed:',
+              fallbackErr,
+            );
+            memoryBrief = '';
+          }
+
+          // Ensure minimum messages even with fallback
+          const lastKMax = Number(process.env.MEMORY_LAST_K_MAX ?? 10);
+          const dynamicLastK = Math.max(
+            4,
+            Math.min(lastKMax, Math.round(tokensApprox / 500) + 3),
+          );
+          messagesToSend = uiMessages.slice(-dynamicLastK);
+        }
+      } else {
+        messagesToSend = uiMessages; // before threshold, no memory injection
+      }
+    }
+
     const { longitude, latitude, city, country } = geolocation(request);
 
     const requestHints: RequestHints = {
@@ -132,6 +262,15 @@ export async function POST(request: Request) {
       city,
       country,
     };
+
+    // Only set base system prompt if no memory was injected
+    if (
+      !enableMemorySlice ||
+      convo.length < MIN_TURNS_FOR_SUMMARY ||
+      !shouldSummarize
+    ) {
+      systemWithMemory = systemPrompt({ selectedChatModel, requestHints });
+    }
 
     await saveMessages({
       messages: [
@@ -151,10 +290,21 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
+        const systemPromptWithMemory = enableMemorySlice
+          ? systemWithMemory
+          : systemPrompt({ selectedChatModel, requestHints });
+
+        // Safety tweak B: Dev logs for token estimation and tool usage
+        if (process.env.NODE_ENV !== 'production') {
+          const tokenEst =
+            messagesToSend.length * 20 + systemPromptWithMemory.length / 4;
+          console.log(`[CHAT] tokenEst.in: ~${Math.round(tokenEst)} tokens`);
+        }
+
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
-          messages: convertToModelMessages(uiMessages),
+          system: systemPromptWithMemory,
+          messages: convertToModelMessages(messagesToSend),
           stopWhen: stepCountIs(5),
           experimental_activeTools:
             selectedChatModel === 'chat-model-reasoning'
@@ -168,8 +318,16 @@ export async function POST(request: Request) {
           experimental_transform: smoothStream({ chunking: 'word' }),
           tools: {
             getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
+            createDocument: createDocument({
+              session,
+              dataStream,
+              memoryBrief,
+            }),
+            updateDocument: updateDocument({
+              session,
+              dataStream,
+              memoryBrief,
+            }),
             requestSuggestions: requestSuggestions({
               session,
               dataStream,
@@ -183,9 +341,10 @@ export async function POST(request: Request) {
 
         result.consumeStream();
 
+        // Safety tweak C: Disable reasoning in production
         dataStream.merge(
           result.toUIMessageStream({
-            sendReasoning: true,
+            sendReasoning: process.env.NODE_ENV !== 'production',
           }),
         );
       },

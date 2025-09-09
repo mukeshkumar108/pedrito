@@ -1,7 +1,7 @@
 'use client';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
-import { memo, useState } from 'react';
+import { memo, useState, useEffect } from 'react';
 import type { Vote } from '@/lib/db/schema';
 import { DocumentToolCall, DocumentToolResult } from './document';
 import { PencilEditIcon, SparklesIcon } from './icons';
@@ -19,6 +19,12 @@ import { MessageReasoning } from './message-reasoning';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { ChatMessage } from '@/lib/types';
 import { useDataStream } from './data-stream-provider';
+import { useLanguage } from '@/lib/contexts/language-context';
+import {
+  getThinkingMessage,
+  type ThinkingStage,
+} from '@/lib/constants/thinking-messages';
+import { AnimatedText } from './animated-text';
 
 // Type narrowing is handled by TypeScript's control flow analysis
 // The AI SDK provides proper discriminated unions for tool calls
@@ -340,14 +346,37 @@ export const PreviewMessage = memo(
 );
 
 export const ThinkingMessage = () => {
+  const { language } = useLanguage();
+  const [currentStage, setCurrentStage] = useState<ThinkingStage>('thinking');
+  const [messageIndex, setMessageIndex] = useState(0);
   const role = 'assistant';
+
+  // Cycle through stages: thinking → processing → generating
+  useEffect(() => {
+    const stages: ThinkingStage[] = ['thinking', 'processing', 'generating'];
+    let stageIndex = 0;
+
+    const stageInterval = setInterval(() => {
+      setCurrentStage(stages[stageIndex % stages.length]);
+      setMessageIndex((prev) => (prev + 1) % 12); // Rotate through messages
+      stageIndex++;
+    }, 4000); // Change every 4 seconds
+
+    return () => clearInterval(stageInterval);
+  }, []);
+
+  const currentMessage = getThinkingMessage(
+    currentStage,
+    language,
+    messageIndex,
+  );
 
   return (
     <motion.div
       data-testid="message-assistant-loading"
       className="w-full mx-auto max-w-3xl px-4 group/message min-h-96"
       initial={{ y: 5, opacity: 0 }}
-      animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
+      animate={{ y: 0, opacity: 1, transition: { delay: 0.5 } }}
       data-role={role}
     >
       <div
@@ -358,13 +387,38 @@ export const ThinkingMessage = () => {
           },
         )}
       >
-        <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-          <SparklesIcon size={14} />
+        <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background animate-bounce">
+          <div className="translate-y-px text-primary">
+            <SparklesIcon size={14} />
+          </div>
         </div>
 
         <div className="flex flex-col gap-2 w-full">
           <div className="flex flex-col gap-4 text-muted-foreground">
-            Hmm...
+            <AnimatedText
+              text={currentMessage}
+              speed={40}
+              className="text-sm font-medium"
+            />
+          </div>
+
+          {/* Animated progress dots */}
+          <div className="flex space-x-1 mt-1">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 bg-primary rounded-full"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Number.POSITIVE_INFINITY,
+                  delay: i * 0.2,
+                }}
+              />
+            ))}
           </div>
         </div>
       </div>

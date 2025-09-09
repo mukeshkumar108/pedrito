@@ -8,9 +8,14 @@ import type { ChatMessage } from '@/lib/types';
 interface UpdateDocumentProps {
   session: Session;
   dataStream: UIMessageStreamWriter<ChatMessage>;
+  memoryBrief?: string; // optional brief injected from chat route
 }
 
-export const updateDocument = ({ session, dataStream }: UpdateDocumentProps) =>
+export const updateDocument = ({
+  session,
+  dataStream,
+  memoryBrief,
+}: UpdateDocumentProps) =>
   tool({
     description: 'Update a document with the given description.',
     inputSchema: z.object({

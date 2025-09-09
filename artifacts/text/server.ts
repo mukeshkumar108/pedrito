@@ -6,10 +6,13 @@ import { createDocumentHandler } from '@/lib/artifacts/server';
 /** Detect very rough English */
 function detectEnglish(text: string): boolean {
   const t = text.toLowerCase();
-  const looksEnglish =
-    /(?:\bthe\b|\band\b|\bof\b|\bin\b|\bto\b|\bfor\b)/.test(t) &&
-    /[a-z]/.test(t) &&
-    !/[áéíóúñü]/i.test(t);
+  const englishWords =
+    /(?:\bthe\b|\band\b|\bof\b|\bin\b|\bto\b|\bfor\b|\bis\b|\bit\b|\bthat\b|\bwith\b|\bas\b|\bthis\b|\bbut\b|\bat\b|\bby\b|\bfrom\b|\bor\b|\ban\b|\bbe\b|\bhave\b|\bdo\b|\bwill\b|\bwould\b|\bcan\b|\bcould\b|\bshould\b|\bmay\b|\bmight\b|\bmust\b|\bshall\b)/.test(
+      t,
+    );
+  const hasLetters = /[a-z]/.test(t);
+  const noSpanishChars = !/[áéíóúñü]/i.test(t);
+  const looksEnglish = englishWords && hasLetters && noSpanishChars;
   return looksEnglish;
 }
 

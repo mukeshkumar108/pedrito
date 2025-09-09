@@ -107,8 +107,9 @@ Overall evidence cap: ≤ 12 lines across all files. Then stop and wait.
 Rules:
 - Output **unified diffs only** with ±3 lines context.
 - No full files. No screenshots. No prose outside the diffs + short rationale.
-- If any diff >150 lines, STOP and ask.
-- After patching, STOP.
+- Each diff: 2–4 bullet rationale + rollback note
+- If any diff >150 lines, STOP and ask before proceeding.
+- After patching, STOP. Do not output full files.
 
 Doc-sync requirement (MANDATORY):
 - For every code change, also patch the smallest necessary updates in /docs:

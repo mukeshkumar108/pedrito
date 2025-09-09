@@ -23,6 +23,8 @@ export const myProvider = isTestEnvironment
         'chat-model-reasoning': reasoningModel,
         'title-model': titleModel,
         'artifact-model': artifactModel,
+        // Test double: summarizer-model maps to chatModel in test
+        'summarizer-model': chatModel,
       },
     })
   : customProvider({
@@ -34,7 +36,9 @@ export const myProvider = isTestEnvironment
         }),
         'title-model': openrouter('meta-llama/llama-3.2-3b-instruct'),
         'artifact-model': openrouter('anthropic/claude-3-haiku'),
+        'summarizer-model': openrouter('openai/gpt-oss-20b'),
       },
+      // TODO: Implement proper image model support (see MODEL_MAP.md for details)
       imageModels: {
         'small-model': openrouter('openai/gpt-4o-mini') as any,
       },

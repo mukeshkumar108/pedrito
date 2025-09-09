@@ -11,6 +11,7 @@ import type { ChatMessage } from '@/lib/types';
 interface CreateDocumentProps {
   session: Session;
   dataStream: UIMessageStreamWriter<ChatMessage>;
+  memoryBrief?: string; // optional brief injected from chat route
 }
 
 // (unchanged) classifyDocType helper …
@@ -29,15 +30,24 @@ function classifyDocType(input: {
     .join(' ')
     .toLowerCase();
 
-  if (/\btalk|discurso|charla|sermon|homil/.test(blob)) return 'talk';
-  if (/\bletter|carta|notificación/.test(blob)) return 'letter';
-  if (/\bessay|ensayo\b/.test(blob)) return 'essay';
-  if (/\btranslate|traducci/.test(blob)) return 'translation';
-  if (/\breport|informe|summary|analysis/.test(blob)) return 'report';
+  if (
+    /\btalk|discurso|charla|sermon|homil|speech|presentation|lecture/.test(blob)
+  )
+    return 'talk';
+  if (/\bletter|carta|notificación|email|message|note/.test(blob))
+    return 'letter';
+  if (/\bessay|ensayo\b|paper|article|composition/.test(blob)) return 'essay';
+  if (/\btranslate|traducci|version|language/.test(blob)) return 'translation';
+  if (/\breport|informe|summary|analysis|review|assessment/.test(blob))
+    return 'report';
   return 'other';
 }
 
-export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
+export const createDocument = ({
+  session,
+  dataStream,
+  memoryBrief,
+}: CreateDocumentProps) =>
   tool({
     description:
       'Create a document for writing or content creation. This tool will generate the contents of the document based on the title, type, and context.',
@@ -63,9 +73,11 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
       doc_type: z
         .enum(['letter', 'talk', 'essay', 'translation', 'report', 'other'])
         .optional(),
+      // optional brief injected by the orchestrator or explicitly by the model
+      memory_brief: z.string().optional(),
     }),
     execute: async (payload) => {
-      const {
+      let {
         title,
         kind,
         context,
@@ -77,6 +89,7 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
         doc_type,
         must_include,
         audience,
+        memory_brief,
       } = payload as {
         title: string;
         kind?: (typeof artifactKinds)[number]; // may be undefined before defaulting
@@ -95,6 +108,7 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
           | 'translation'
           | 'report'
           | 'other';
+        memory_brief?: string;
       };
 
       // Even though Zod defaults kind, keep this safety just in case:
@@ -104,6 +118,16 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
       const normalizedContext = Array.isArray(context)
         ? context.join('\n')
         : context || '(no context provided)';
+
+      // If model didn't supply a brief, inject the orchestrator-provided one
+      if (!memory_brief && memoryBrief) {
+        memory_brief = memoryBrief;
+      }
+
+      // Prepend a compact brief if available
+      const contextWithBrief = memory_brief
+        ? `[BRIEF]\n${memory_brief.trim()}\n\n[USER CONTEXT]\n${normalizedContext}`
+        : normalizedContext;
 
       // Resolve doc_type
       const resolvedDocType =
@@ -172,12 +196,19 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
         );
       }
 
+      if (process.env.DEBUG_ARTIFACTS === 'true') {
+        console.log(
+          '[createDocument] final context with brief:',
+          contextWithBrief.slice(0, 1000),
+        );
+      }
+
       await documentHandler.onCreateDocument({
         id,
         title,
         dataStream,
         session,
-        context: normalizedContext,
+        context: contextWithBrief,
         language,
         tone,
         outline,

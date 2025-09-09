@@ -70,15 +70,17 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
         audience: args.audience,
       });
 
-      if (args.session?.user?.id) {
-        await saveDocument({
-          id: args.id,
-          title: args.title,
-          content: draftContent,
-          kind: config.kind,
-          userId: args.session.user.id,
-        });
+      if (!args.session?.user?.id) {
+        console.error('Session or user ID is missing, cannot save document');
+        return;
       }
+      await saveDocument({
+        id: args.id,
+        title: args.title,
+        content: draftContent,
+        kind: config.kind,
+        userId: args.session.user.id,
+      });
 
       return;
     },
