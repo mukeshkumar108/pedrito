@@ -17,16 +17,20 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { useRouter } from 'next/navigation';
 import { toast } from './toast';
 import { LoaderIcon } from './icons';
 import { guestRegex } from '@/lib/constants';
+import { useLanguage } from '@/lib/contexts/language-context';
 
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
   const { data, status } = useSession();
   const { setTheme, resolvedTheme } = useTheme();
+  const { setOpenMobile } = useSidebar();
+  const { language, setLanguage } = useLanguage();
 
   const isGuest = guestRegex.test(data?.user?.email ?? '');
 
@@ -72,9 +76,30 @@ export function SidebarUserNav({ user }: { user: User }) {
             className="w-[--radix-popper-anchor-width]"
           >
             <DropdownMenuItem
+              data-testid="user-nav-item-profile"
+              className="cursor-pointer"
+              onSelect={() => {
+                router.push('/profile');
+                setOpenMobile?.(false);
+              }}
+            >
+              Profile Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              data-testid="user-nav-item-language"
+              className="cursor-pointer"
+              onSelect={() => setLanguage(language === 'en' ? 'es' : 'en')}
+            >
+              {`Switch to ${language === 'en' ? 'Español 🇪🇸' : 'English 🇺🇸'}`}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
               data-testid="user-nav-item-theme"
               className="cursor-pointer"
-              onSelect={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              onSelect={() =>
+                setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+              }
             >
               {`Toggle ${resolvedTheme === 'light' ? 'dark' : 'light'} mode`}
             </DropdownMenuItem>

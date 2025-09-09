@@ -64,7 +64,6 @@ export function AppSidebar({ user }: { user: User | undefined }) {
       </SidebarContent>
       <SidebarFooter>
         <div className="flex flex-col gap-2 p-2">
-          <LanguageToggle />
           {user && <SidebarUserNav user={user} />}
         </div>
       </SidebarFooter>
