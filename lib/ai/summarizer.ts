@@ -105,6 +105,8 @@ export class ModelSummarizer implements Summarizer {
         model: myProvider.languageModel(modelId),
         temperature: 0,
         prompt,
+        experimental_activeTools: [], // Explicitly disable tools for summarizer
+        tools: {}, // Ensure no tools are available
       });
       const text = (res?.text || '').trim();
       if (!text) throw new Error('Empty summarizer output');
@@ -139,6 +141,8 @@ export class ModelSummarizer implements Summarizer {
             model: myProvider.languageModel(fallbackModel),
             temperature: 0,
             prompt,
+            experimental_activeTools: [], // Explicitly disable tools for all fallback models
+            tools: {}, // Ensure no tools are available
           });
           const text = (res?.text || '').trim();
           if (text) {
@@ -185,6 +189,8 @@ export class ModelSummarizer implements Summarizer {
         model: myProvider.languageModel(modelId),
         temperature: 0,
         prompt: structuredPrompt,
+        experimental_activeTools: [], // Explicitly disable tools for summarizer
+        tools: {}, // Ensure no tools are available
       });
 
       const text = (res?.text || '').trim();
