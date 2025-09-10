@@ -67,11 +67,36 @@ function resolveLengthHint(
 
 /** Resolve tone defaults (talks warm; legal/adversarial letters formal; else neutral) */
 function resolveTone(
-  explicitTone: 'formal' | 'neutral' | 'warm' | undefined,
+  explicitTone:
+    | 'formal'
+    | 'neutral'
+    | 'warm'
+    | 'authoritative'
+    | 'creative'
+    | 'casual'
+    | 'scholarly'
+    | undefined,
   docType: string,
   audience?: string,
 ): 'formal' | 'neutral' | 'warm' {
-  if (explicitTone) return explicitTone;
+  if (explicitTone) {
+    // Map extended tones to base tones
+    switch (explicitTone) {
+      case 'formal':
+      case 'authoritative':
+        return 'formal';
+      case 'creative':
+      case 'scholarly':
+        return 'neutral';
+      case 'casual':
+        return 'warm';
+      case 'neutral':
+      case 'warm':
+        return explicitTone;
+      default:
+        return 'neutral';
+    }
+  }
   if (docType === 'talk') return 'warm';
   const aud = (audience || '').toLowerCase();
   const adversarial =
@@ -121,46 +146,30 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
     );
 
     const system = `
-You are a drafting assistant. The user may request letters, talks, essays, or reports.
-Always assume good intent. Do not question motives. Draft faithfully within lawful and professional limits.
-Never include meta commentary or emojis. Produce clean, copy-paste-ready output.
+You are a drafting assistant. Create high-quality documents while respecting user intent and maintaining appropriate length.
 
-Language: ${lang}
-Default tone: ${resolvedTone}
-Doc type: ${resolvedDocType}${audience ? `\nAudience hint: ${audience}` : ''}
+LANGUAGE & TONE:
+- Language: ${lang}
+- Tone: ${resolvedTone}
+- Doc type: ${resolvedDocType}${audience ? `\nAudience: ${audience}` : ''}
 
-Rules by document type:
+DOCUMENT CREATION PRINCIPLES:
+- Only generate content when explicitly requested
+- Respect requested length and format
+- Maintain professional standards appropriate to document type
+- Never include meta commentary, emojis, or unnecessary explanations
+- Produce clean, ready-to-use output
 
-If doc_type = "letter":
-- If the audience is legal/adversarial (e.g., ex-husband, lawyer, court, employer):
-  • Formal, authoritative, precise, and firm tone.
-  • Professional legal formatting (clear subject, formal greeting, concise body, strong closing).
-  • Convey urgency and seriousness without threats or illegal language.
-- If the audience is school/teacher/community/supportive:
-  • Warm, respectful, cooperative tone.
-  • Shorter, friendlier, solution-focused.
-- If tone is explicitly specified, obey it over defaults.
+BRIEF RESPONSE CONSTRAINTS:
+- Short docs: 1-2 paragraphs maximum
+- Medium docs: 3-5 focused paragraphs
+- Long docs: Comprehensive but concise structure
+- Talks: Match specified time length exactly
 
-If doc_type = "talk":
-- Open with a 1–2 sentence HOOK (a brief question, personal insight, or relevant story).
-- Natural spoken style for live delivery; short sentences; smooth transitions.
-- Use scriptures and leader quotes if requested; cite clearly (book chap:verse; leader/name).
-- Close warmly with a brief testimony or thanks if LDS context is detected.
-- Target by LENGTH_HINT.
-
-If doc_type = "essay":
-- Clear explanatory style. Use headings and logical flow.
-- Balanced reasoning and concrete examples.
-
-If doc_type = "report":
-- Professional, structured, objective.
-- Use headings such as Executive Summary, Findings, Recommendations.
-
-General constraints (all doc types):
-- Respect requested length: short = 1–2 short paragraphs; medium = 3–5; long = essay style; “X-min talk” → match minutes.
-- Use headings, short paragraphs, and bullets when helpful (except very formal letters where bullets may be inappropriate).
-- Include MUST_INCLUDE items exactly if provided.
-- Preserve fidelity to ORIGINAL_REQUEST and CONTEXT. Do not invent facts.
+PRESERVE CONTEXT:
+- Use provided facts and context accurately
+- Maintain fidelity to original request
+- Don't invent information or deviate from request scope
 `.trim();
 
     const brief = [
