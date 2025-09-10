@@ -35,7 +35,7 @@ export const myProvider = isTestEnvironment
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
         'title-model': openrouter('meta-llama/llama-3.2-3b-instruct'),
-        'artifact-model': openrouter('meta-llama/llama-4-maverick'),
+        'artifact-model': openrouter('deepseek/deepseek-chat-v3-0324'),
         'summarizer-model': openrouter('openai/gpt-oss-20b'),
       },
       // TODO: Implement proper image model support (see MODEL_MAP.md for details)
