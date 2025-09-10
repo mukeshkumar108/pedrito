@@ -175,7 +175,7 @@ export const createDocument = ({
         if (context.kids && Array.isArray(context.kids)) {
           const kidsInfo = context.kids
             .map(
-              (kid) =>
+              (kid: { name: string; age?: number; gender?: string }) =>
                 `${kid.name}${kid.age ? ` (${kid.age}${kid.gender ? `, ${kid.gender}` : ''})` : ''}`,
             )
             .join(', ');
