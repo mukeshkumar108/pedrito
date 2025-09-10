@@ -24,11 +24,25 @@ export interface CreateDocumentCallbackProps {
   session: Session;
   context?: string;
   language?: 'es-GT' | 'en';
-  tone?: 'formal' | 'neutral' | 'warm';
+  tone?:
+    | 'formal'
+    | 'neutral'
+    | 'warm'
+    | 'authoritative'
+    | 'creative'
+    | 'casual'
+    | 'scholarly';
   outline?: string[];
   length?: 'short' | 'medium' | 'long' | '5-min talk';
   original_request?: string;
-  doc_type?: 'letter' | 'talk' | 'essay' | 'translation' | 'report' | 'other';
+  doc_type?:
+    | 'letter'
+    | 'talk'
+    | 'essay'
+    | 'translation'
+    | 'report'
+    | 'story'
+    | 'other';
   must_include?: string[];
   audience?: string;
 }

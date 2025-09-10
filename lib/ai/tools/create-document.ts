@@ -19,7 +19,7 @@ function classifyDocType(input: {
   title?: string;
   original_request?: string;
   context?: string | string[];
-}): 'letter' | 'talk' | 'essay' | 'translation' | 'report' | 'other' {
+}): 'letter' | 'talk' | 'essay' | 'translation' | 'report' | 'story' | 'other' {
   const blob = [
     input.title || '',
     Array.isArray(input.context)
@@ -40,6 +40,7 @@ function classifyDocType(input: {
   if (/\btranslate|traducci|version|language/.test(blob)) return 'translation';
   if (/\breport|informe|summary|analysis|review|assessment/.test(blob))
     return 'report';
+  if (/\bstory|historia|cuento|narrative|tale/.test(blob)) return 'story';
   return 'other';
 }
 
@@ -60,7 +61,17 @@ export const createDocument = ({
       // Accept string OR array of strings for context
       context: z.union([z.string(), z.array(z.string())]).optional(),
       language: z.enum(['es-GT', 'en']).optional(),
-      tone: z.enum(['formal', 'neutral', 'warm']).optional(),
+      tone: z
+        .enum([
+          'formal',
+          'neutral',
+          'warm',
+          'authoritative',
+          'creative',
+          'casual',
+          'scholarly',
+        ])
+        .optional(),
       outline: z.array(z.string()).optional(),
       length: z.enum(['short', 'medium', 'long', '5-min talk']).optional(),
       original_request: z.string().optional(),
@@ -71,7 +82,15 @@ export const createDocument = ({
 
       // Optional doc_type
       doc_type: z
-        .enum(['letter', 'talk', 'essay', 'translation', 'report', 'other'])
+        .enum([
+          'letter',
+          'talk',
+          'essay',
+          'translation',
+          'report',
+          'story',
+          'other',
+        ])
         .optional(),
       // optional brief injected by the orchestrator or explicitly by the model
       memory_brief: z.string().optional(),
@@ -107,6 +126,7 @@ export const createDocument = ({
           | 'essay'
           | 'translation'
           | 'report'
+          | 'story'
           | 'other';
         memory_brief?: string;
       };

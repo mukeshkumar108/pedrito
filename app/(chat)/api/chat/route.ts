@@ -306,7 +306,7 @@ export async function POST(request: Request) {
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
         const systemPromptWithMemory = enableMemorySlice
-          ? systemWithMemory
+          ? `${systemWithMemory}\n\n[MEMORY BRIEF FOR TOOLS]\n${memoryBrief}`
           : systemPrompt({ selectedChatModel, requestHints });
 
         // Safety tweak B: Dev logs for token estimation and tool usage
