@@ -227,28 +227,35 @@ function buildStructuredPrompt(
   const instructions =
     language === 'en'
       ? {
-          title: 'Extract Structured Memory from Conversation',
+          title: 'Extract Structured Memory from Conversation (Facts Only)',
           summary:
-            'Provide a concise 1-2 sentence summary of the main conversation topic and key points.',
+            'Provide a concise 1-2 sentence summary of the main conversation topics and key user information.',
           facts:
-            'Extract specific facts, dates, names, amounts, and details mentioned.',
-          decisions: 'List key decisions that have been made or agreed upon.',
+            'Extract ONLY user-provided facts about themselves (name, profession, family, location, preferences). DO NOT include creative fiction, hypothetical scenarios, or AI-generated stories.',
+          decisions:
+            'List key actions taken (documents created, tasks completed) and user requests fulfilled.',
           openItems:
-            'Identify pending questions, unresolved issues, or decisions that need to be made.',
+            'Identify pending user questions, unresolved requests, or incomplete tasks.',
+          contentFilter:
+            'IMPORTANT: Distinguish between REAL user information vs creative/AI-generated content. Only include verified user facts, not fictional narratives.',
           format:
-            'Output in clear sections with bullet points. Be factual and specific.',
+            'Output in clear sections with bullet points. Focus on real user details and conversation outcomes.',
         }
       : {
-          title: 'Extraer Memoria Estructurada de la Conversación',
+          title:
+            'Extraer Memoria Estructurada de la Conversación (Solo Hechos)',
           summary:
-            'Proporciona un resumen conciso de 1-2 oraciones del tema principal de la conversación y puntos clave.',
+            'Proporciona un resumen conciso de 1-2 oraciones de los temas principales de conversación e información clave del usuario.',
           facts:
-            'Extrae hechos específicos, fechas, nombres, cantidades y detalles mencionados.',
-          decisions: 'Lista decisiones clave que se han tomado o acordado.',
+            'Extrae SOLO hechos proporcionados por el usuario sobre sí mismo (nombre, profesión, familia, ubicación, preferencias). NO incluyas ficción creativa, escenarios hipotéticos, o historias generadas por IA.',
+          decisions:
+            'Lista acciones clave tomadas (documentos creados, tareas completadas) y solicitudes del usuario cumplidas.',
           openItems:
-            'Identifica preguntas pendientes, cuestiones sin resolver o decisiones que deben tomarse.',
+            'Identifica preguntas pendientes del usuario, solicitudes sin resolver, o tareas incompletas.',
+          contentFilter:
+            'IMPORTANTE: Distingue entre información REAL del usuario vs contenido creativo/generado por IA. Incluye solo hechos verificados del usuario, no narrativas ficticias.',
           format:
-            'Salida en secciones claras con viñetas. Sé factual y específico.',
+            'Salida en secciones claras con viñetas. Enfócate en detalles reales del usuario y resultados de conversación.',
         };
 
   return `
@@ -260,23 +267,23 @@ INSTRUCTIONS:
 3. ${instructions.decisions}
 4. ${instructions.openItems}
 
+${instructions.contentFilter}
+
 ${instructions.format}
 
 OUTPUT FORMAT:
 SUMMARY: {brief summary}
 
 FACTS:
-• {fact 1}
-• {fact 2}
-• {fact 3}
+• {real user fact 1}
+• {real user fact 2}
 
 DECISIONS:
-• {decision 1}
-• {decision 2}
+• {action taken 1}
+• {task completed 1}
 
 OPEN ITEMS:
-• {open item 1}
-• {open item 2}
+• {pending item 1}
 
 Conversation:
 ${fullConversation}
