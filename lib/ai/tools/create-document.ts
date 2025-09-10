@@ -58,8 +58,30 @@ export const createDocument = ({
       // ✅ Make `kind` default to "text" so missing values don’t crash
       kind: z.enum(artifactKinds).default('text'),
 
-      // Accept string OR array of strings for context
-      context: z.union([z.string(), z.array(z.string())]).optional(),
+      // Accept string, array of strings, OR structured object for rich context
+      context: z
+        .union([
+          z.string(),
+          z.array(z.string()),
+          z
+            .object({
+              user_location: z.string().optional(),
+              partner_name: z.string().optional(),
+              partner_location: z.string().optional(),
+              kids: z
+                .array(
+                  z.object({
+                    name: z.string(),
+                    age: z.number().optional(),
+                    gender: z.string().optional(),
+                  }),
+                )
+                .optional(),
+              user_goal: z.string().optional(),
+            })
+            .catchall(z.any()), // Allow additional properties
+        ])
+        .optional(),
       language: z.enum(['es-GT', 'en']).optional(),
       tone: z
         .enum([
@@ -112,7 +134,7 @@ export const createDocument = ({
       } = payload as {
         title: string;
         kind?: (typeof artifactKinds)[number]; // may be undefined before defaulting
-        context?: string | string[];
+        context?: string | string[] | any; // Can be string, array, or structured object
         language?: 'es-GT' | 'en';
         tone?: 'formal' | 'neutral' | 'warm';
         outline?: string[];
@@ -134,10 +156,56 @@ export const createDocument = ({
       // Even though Zod defaults kind, keep this safety just in case:
       const safeKind: (typeof artifactKinds)[number] = kind ?? 'text';
 
-      // Normalize context
-      const normalizedContext = Array.isArray(context)
-        ? context.join('\n')
-        : context || '(no context provided)';
+      // Normalize context to string
+      let normalizedContext: string;
+      if (Array.isArray(context)) {
+        normalizedContext = context.join('\n');
+      } else if (typeof context === 'object' && context !== null) {
+        // Handle structured context object
+        const contextParts: string[] = [];
+        if (context.user_location)
+          contextParts.push(`User Location: ${context.user_location}`);
+        if (context.partner_name && context.partner_location) {
+          contextParts.push(
+            `Partner: ${context.partner_name} (${context.partner_location})`,
+          );
+        } else if (context.partner_name) {
+          contextParts.push(`Partner: ${context.partner_name}`);
+        }
+        if (context.kids && Array.isArray(context.kids)) {
+          const kidsInfo = context.kids
+            .map(
+              (kid) =>
+                `${kid.name}${kid.age ? ` (${kid.age}${kid.gender ? `, ${kid.gender}` : ''})` : ''}`,
+            )
+            .join(', ');
+          if (kidsInfo) contextParts.push(`Kids: ${kidsInfo}`);
+        }
+        if (context.user_goal) contextParts.push(`Goal: ${context.user_goal}`);
+
+        // Handle any additional properties
+        for (const [key, value] of Object.entries(context)) {
+          if (
+            ![
+              'user_location',
+              'partner_name',
+              'partner_location',
+              'kids',
+              'user_goal',
+            ].includes(key) &&
+            value
+          ) {
+            contextParts.push(`${key}: ${value}`);
+          }
+        }
+
+        normalizedContext =
+          contextParts.length > 0
+            ? contextParts.join('\n')
+            : '(no structured context provided)';
+      } else {
+        normalizedContext = context || '(no context provided)';
+      }
 
       // If model didn't supply a brief, inject the orchestrator-provided one
       if (!memory_brief && memoryBrief) {
