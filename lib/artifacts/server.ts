@@ -45,6 +45,7 @@ export interface CreateDocumentCallbackProps {
     | 'other';
   must_include?: string[];
   audience?: string;
+  purpose?: string;
 }
 
 export interface UpdateDocumentCallbackProps {
@@ -82,6 +83,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
         doc_type: args.doc_type,
         must_include: args.must_include,
         audience: args.audience,
+        purpose: args.purpose,
       });
 
       if (!args.session?.user?.id) {
