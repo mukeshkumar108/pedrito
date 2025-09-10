@@ -233,16 +233,24 @@ About the origin of user's request:
 export const systemPrompt = ({
   selectedChatModel,
   requestHints,
+  language = 'en',
 }: {
   selectedChatModel: string;
   requestHints: RequestHints;
+  language?: 'en' | 'es';
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
 
+  // Create language-specific system prompt
+  const languageInstruction =
+    language === 'es'
+      ? '\n\nIMPORTANTE: Responde en español ya que el usuario está comunicándose en español.'
+      : '\n\nIMPORTANT: Respond in English since the user is communicating in English.';
+
   if (selectedChatModel === 'chat-model-reasoning') {
-    return `${pedritoPrompt}\n\n${requestPrompt}`;
+    return `${pedritoPrompt}${languageInstruction}\n\n${requestPrompt}`;
   } else {
-    return `${pedritoPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
+    return `${pedritoPrompt}${languageInstruction}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
   }
 };
 

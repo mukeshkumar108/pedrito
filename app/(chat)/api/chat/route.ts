@@ -152,10 +152,8 @@ export async function POST(request: Request) {
     const enableMemorySlice = process.env.MEMORY_SLICE === '1';
     const MIN_TURNS_FOR_SUMMARY = Number(process.env.MEMORY_MIN_TURNS ?? 5);
     let memoryBrief = '';
-    let systemWithMemory = systemPrompt({
-      selectedChatModel,
-      requestHints: { longitude: '0', latitude: '0', city: '', country: '' },
-    });
+    // Will be set later based on whether memory is used
+    let systemWithMemory = '';
     let messagesToSend = uiMessages;
 
     // Declare variables outside the if block so they're accessible later
@@ -284,7 +282,11 @@ export async function POST(request: Request) {
       convo.length < MIN_TURNS_FOR_SUMMARY ||
       !shouldSummarize
     ) {
-      systemWithMemory = systemPrompt({ selectedChatModel, requestHints });
+      systemWithMemory = systemPrompt({
+        selectedChatModel,
+        requestHints,
+        language,
+      });
     }
 
     await saveMessages({
@@ -307,7 +309,7 @@ export async function POST(request: Request) {
       execute: ({ writer: dataStream }) => {
         const systemPromptWithMemory = enableMemorySlice
           ? `${systemWithMemory}\n\n[MEMORY BRIEF FOR TOOLS]\n${memoryBrief}`
-          : systemPrompt({ selectedChatModel, requestHints });
+          : systemPrompt({ selectedChatModel, requestHints, language });
 
         // Safety tweak B: Dev logs for token estimation and tool usage
         if (process.env.NODE_ENV !== 'production') {
